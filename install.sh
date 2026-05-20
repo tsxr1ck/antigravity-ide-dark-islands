@@ -2,7 +2,7 @@
 
 set -e
 
-echo "🏝️  Islands Dark Theme Installer for Antigravity"
+echo "🏝️  Islands Dark Theme Installer for agy-ide"
 echo "================================================="
 echo ""
 
@@ -12,25 +12,41 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Check if antigravity command is available
+# Check specifically for the antigravity-ide command
 ANTIGRAVITY_CLI=""
-if command -v antigravity &> /dev/null; then
-    ANTIGRAVITY_CLI="antigravity"
-elif [ -f "/usr/local/bin/antigravity" ]; then
-    ANTIGRAVITY_CLI="/usr/local/bin/antigravity"
-elif [ -f "/Applications/Antigravity.app/Contents/Resources/app/bin/antigravity" ]; then
-    ANTIGRAVITY_CLI="/Applications/Antigravity.app/Contents/Resources/app/bin/antigravity"
+if command -v antigravity-ide &> /dev/null; then
+    ANTIGRAVITY_CLI="antigravity-ide"
+elif [ -f "/usr/local/bin/antigravity-ide" ]; then
+    ANTIGRAVITY_CLI="/usr/local/bin/antigravity-ide"
+elif [ -f "/Applications/Antigravity IDE.app/Contents/Resources/app/bin/antigravity-ide" ]; then
+    ANTIGRAVITY_CLI="/Applications/Antigravity IDE.app/Contents/Resources/app/bin/antigravity-ide"
+elif [ -f "/Applications/Antigravity.app/Contents/Resources/app/bin/antigravity-ide" ]; then
+    ANTIGRAVITY_CLI="/Applications/Antigravity.app/Contents/Resources/app/bin/antigravity-ide"
 else
-    echo -e "${RED}❌ Error: Antigravity CLI not found!${NC}"
-    echo "Please install Antigravity and make sure 'antigravity' command is in your PATH."
-    echo "You can do this by:"
-    echo "  1. Open Antigravity"
-    echo "  2. Press Cmd+Shift+P"
-    echo "  3. Type 'Shell Command: Install antigravity command in PATH'"
+    echo -e "${RED}❌ Error: antigravity-ide CLI not found!${NC}"
+    echo "Please open Antigravity IDE, press Cmd+Shift+P, and run:"
+    echo "  'Shell Command: Install antigravity-ide command in PATH'"
     exit 1
 fi
 
-echo -e "${GREEN}✓ Antigravity CLI found: $ANTIGRAVITY_CLI${NC}"
+echo -e "${GREEN}✓ antigravity-ide CLI found: $ANTIGRAVITY_CLI${NC}"
+
+# Detect whether we are installing for Antigravity IDE or Antigravity
+APP_DIR_NAME="Antigravity"
+EXT_DIR_NAME=".antigravity"
+
+if [[ "$ANTIGRAVITY_CLI" == *"Antigravity IDE"* ]]; then
+    APP_DIR_NAME="Antigravity IDE"
+    EXT_DIR_NAME=".antigravity-ide"
+elif ps aux | grep -i "antigravity ide" | grep -v grep >/dev/null 2>&1; then
+    APP_DIR_NAME="Antigravity IDE"
+    EXT_DIR_NAME=".antigravity-ide"
+elif [ -d "$HOME/Library/Application Support/Antigravity IDE" ] && [ ! -d "$HOME/Library/Application Support/Antigravity" ]; then
+    APP_DIR_NAME="Antigravity IDE"
+    EXT_DIR_NAME=".antigravity-ide"
+fi
+
+echo -e "${GREEN}✓ Target app detected: $APP_DIR_NAME${NC}"
 
 # Get the directory where this script is located
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -38,8 +54,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 echo ""
 echo "📦 Step 1: Installing Islands Dark theme extension..."
 
-# Install to Antigravity extensions directory
-EXT_DIR="$HOME/.antigravity/extensions/bwya77.islands-dark-1.0.0"
+EXT_DIR="$HOME/$EXT_DIR_NAME/extensions/bwya77.islands-dark-1.0.0"
 rm -rf "$EXT_DIR"
 mkdir -p "$EXT_DIR"
 cp "$SCRIPT_DIR/package.json" "$EXT_DIR/"
@@ -58,46 +73,45 @@ if "$ANTIGRAVITY_CLI" --install-extension subframe7536.custom-ui-style --force 2
     echo -e "${GREEN}✓ Custom UI Style extension installed${NC}"
 else
     echo -e "${YELLOW}⚠️  Could not install Custom UI Style extension automatically${NC}"
-    echo "   Please install 'Custom UI Style' (subframe7536.custom-ui-style) manually from the Extensions marketplace"
+    echo "   Please install 'Custom UI Style' manually from the agy-ide extensions sidebar."
 fi
 
 echo ""
-echo "🔤 Step 3: Installing Bear Sans UI fonts..."
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    FONT_DIR="$HOME/Library/Fonts"
-    if ls "$SCRIPT_DIR/fonts/"*.otf &>/dev/null 2>&1; then
-        echo "   Installing fonts to: $FONT_DIR"
-        cp "$SCRIPT_DIR/fonts/"*.otf "$FONT_DIR/" 2>/dev/null || true
-        echo -e "${GREEN}✓ Fonts installed to Font Book${NC}"
-        echo "   Note: You may need to restart applications to use the new fonts"
-    else
-        echo -e "${YELLOW}⚠️  No fonts found in fonts/ folder${NC}"
-        echo "   Download Bear Sans UI from: https://github.com/bwya77/vscode-dark-islands"
-        echo "   IBM Plex Mono: https://www.ibm.com/plex/"
-        echo "   FiraCode Nerd Font: https://www.nerdfonts.com/"
-    fi
-elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    FONT_DIR="$HOME/.local/share/fonts"
-    mkdir -p "$FONT_DIR"
-    if ls "$SCRIPT_DIR/fonts/"*.otf &>/dev/null 2>&1; then
-        echo "   Installing fonts to: $FONT_DIR"
-        cp "$SCRIPT_DIR/fonts/"*.otf "$FONT_DIR/" 2>/dev/null || true
+echo "🔤 Step 3: Installing UI fonts (.otf & .ttf)..."
+
+# Enable case-insensitive globbing locally to match .TTF or .OTF safely
+shopt -s nullglob nocaseglob
+FONT_FILES=("$SCRIPT_DIR/fonts/"*.otf "$SCRIPT_DIR/fonts/"*.ttf)
+shopt -u nullglob nocaseglob
+
+if [ ${#FONT_FILES[@]} -gt 0 ]; then
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        FONT_DIR="$HOME/Library/Fonts"
+        echo "   Installing fonts to Mac Font Book: $FONT_DIR"
+        for f in "${FONT_FILES[@]}"; do
+            cp "$f" "$FONT_DIR/" 2>/dev/null || true
+        done
+        echo -e "${GREEN}✓ Fonts copied successfully${NC}"
+    elif [[ "$OSTYPE" == "linux-gnu"* ]]; then
+        FONT_DIR="$HOME/.local/share/fonts"
+        mkdir -p "$FONT_DIR"
+        echo "   Installing fonts to Linux User Space: $FONT_DIR"
+        for f in "${FONT_FILES[@]}"; do
+            cp "$f" "$FONT_DIR/" 2>/dev/null || true
+        done
         fc-cache -f 2>/dev/null || true
-        echo -e "${GREEN}✓ Fonts installed${NC}"
-    else
-        echo -e "${YELLOW}⚠️  No fonts found in fonts/ folder${NC}"
+        echo -e "${GREEN}✓ Fonts installed and font-cache refreshed${NC}"
     fi
 else
-    echo -e "${YELLOW}⚠️  Could not detect OS type for font installation${NC}"
-    echo "   Please manually install the fonts from the 'fonts/' folder"
+    echo -e "${YELLOW}⚠️  No .otf or .ttf fonts found in fonts/ folder${NC}"
 fi
 
 echo ""
-echo "⚙️  Step 4: Applying Antigravity settings..."
+echo "⚙️  Step 4: Applying configuration settings..."
 
-SETTINGS_DIR="$HOME/Library/Application Support/Antigravity/User"
+SETTINGS_DIR="$HOME/Library/Application Support/$APP_DIR_NAME/User"
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    SETTINGS_DIR="$HOME/.config/Antigravity/User"
+    SETTINGS_DIR="$HOME/.config/$APP_DIR_NAME/User"
 fi
 
 mkdir -p "$SETTINGS_DIR"
@@ -108,9 +122,10 @@ if [ -f "$SETTINGS_FILE" ]; then
     echo "   Backing up to settings.json.backup"
     cp "$SETTINGS_FILE" "$SETTINGS_FILE.backup"
 
-    echo "   Merging Islands Dark settings with your existing settings..."
+    echo "   Merging settings safely using Node..."
 
     if command -v node &> /dev/null; then
+        export SETTINGS_DIR
         SCRIPT_DIR_ESCAPED="${SCRIPT_DIR//\\/\\\\}"
         node << NODE_SCRIPT
 const fs = require('fs');
@@ -126,16 +141,9 @@ function stripJsonc(text) {
 const scriptDir = '${SCRIPT_DIR_ESCAPED}';
 const newSettings = JSON.parse(stripJsonc(fs.readFileSync(path.join(scriptDir, 'settings.json'), 'utf8')));
 
-let settingsDir;
-if (process.platform === 'darwin') {
-    settingsDir = path.join(process.env.HOME, 'Library/Application Support/Antigravity/User');
-} else {
-    settingsDir = path.join(process.env.HOME, '.config/Antigravity/User');
-}
-
+const settingsDir = process.env.SETTINGS_DIR;
 const settingsFile = path.join(settingsDir, 'settings.json');
-const existingText = fs.readFileSync(settingsFile, 'utf8');
-const existingSettings = JSON.parse(stripJsonc(existingText));
+const existingSettings = JSON.parse(stripJsonc(fs.readFileSync(settingsFile, 'utf8')));
 
 const mergedSettings = { ...existingSettings, ...newSettings };
 
@@ -152,8 +160,7 @@ console.log('Settings merged successfully');
 NODE_SCRIPT
         echo -e "${GREEN}✓ Settings merged${NC}"
     else
-        echo -e "${YELLOW}   Node.js not found. Please manually merge settings.json from this repo into your Antigravity settings.${NC}"
-        echo "   Your original settings have been backed up to settings.json.backup"
+        echo -e "${YELLOW}  Node.js missing. Please append theme parameters manually.${NC}"
     fi
 else
     cp "$SCRIPT_DIR/settings.json" "$SETTINGS_FILE"
@@ -161,37 +168,13 @@ else
 fi
 
 echo ""
-echo "🚀 Step 5: Enabling Custom UI Style..."
-
-FIRST_RUN_FILE="$SCRIPT_DIR/.islands_dark_first_run"
-if [ ! -f "$FIRST_RUN_FILE" ]; then
-    touch "$FIRST_RUN_FILE"
-    echo ""
-    echo -e "${YELLOW}📝 Important Notes:${NC}"
-    echo "   • IBM Plex Mono and FiraCode Nerd Font Mono need to be installed separately"
-    echo "   • After Antigravity reloads, you may see a 'corrupt installation' warning"
-    echo "   • This is expected — click the gear icon and select 'Don't Show Again'"
-    echo "   • Bear Sans UI font can be downloaded from the original repo:"
-    echo "     https://github.com/bwya77/vscode-dark-islands"
-    echo ""
-    if [ -t 0 ]; then
-        read -p "Press Enter to continue and reload Antigravity..."
-    fi
-fi
-
-echo "   Applying CSS customizations..."
+echo "🚀 Step 5: Refreshing your window..."
 echo -e "${GREEN}✓ Setup complete!${NC}"
 echo ""
-echo "🎉 Islands Dark theme has been installed in Antigravity!"
-echo "   Antigravity will now reload to apply the custom UI style."
+echo "🎉 Islands Dark has been targeted to your agy-ide instance."
+echo "   Reloading window..."
 echo ""
 
-if [[ "$OSTYPE" == "darwin"* ]]; then
-    osascript -e 'display notification "Islands Dark theme installed successfully!" with title "🏝️ Islands Dark for Antigravity"' 2>/dev/null || true
-fi
-
-echo "   Reloading Antigravity..."
 "$ANTIGRAVITY_CLI" --reload-window 2>/dev/null || "$ANTIGRAVITY_CLI" . 2>/dev/null || true
 
-echo ""
 echo -e "${GREEN}Done! 🏝️${NC}"

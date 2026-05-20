@@ -13,27 +13,46 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-# Check if antigravity command is available
+# Check if antigravity-ide command is available
 ANTIGRAVITY_CLI=""
-if command -v antigravity &> /dev/null; then
-    ANTIGRAVITY_CLI="antigravity"
-elif [ -f "/usr/local/bin/antigravity" ]; then
-    ANTIGRAVITY_CLI="/usr/local/bin/antigravity"
-elif [ -f "/Applications/Antigravity.app/Contents/Resources/app/bin/antigravity" ]; then
-    ANTIGRAVITY_CLI="/Applications/Antigravity.app/Contents/Resources/app/bin/antigravity"
+if command -v antigravity-ide &> /dev/null; then
+    ANTIGRAVITY_CLI="antigravity-ide"
+elif [ -f "/usr/local/bin/antigravity-ide" ]; then
+    ANTIGRAVITY_CLI="/usr/local/bin/antigravity-ide"
+elif [ -f "/Applications/Antigravity IDE.app/Contents/Resources/app/bin/antigravity-ide" ]; then
+    ANTIGRAVITY_CLI="/Applications/Antigravity IDE.app/Contents/Resources/app/bin/antigravity-ide"
+elif [ -f "/Applications/Antigravity.app/Contents/Resources/app/bin/antigravity-ide" ]; then
+    ANTIGRAVITY_CLI="/Applications/Antigravity.app/Contents/Resources/app/bin/antigravity-ide"
 else
-    echo -e "${YELLOW}⚠️  Warning: Antigravity CLI not found${NC}"
+    echo -e "${YELLOW}⚠️  Warning: antigravity-ide CLI not found${NC}"
     echo "   Some features may not work properly"
 fi
 
 if [ -n "$ANTIGRAVITY_CLI" ]; then
-    echo -e "${GREEN}✓ Antigravity CLI found: $ANTIGRAVITY_CLI${NC}"
+    echo -e "${GREEN}✓ antigravity-ide CLI found: $ANTIGRAVITY_CLI${NC}"
 fi
+
+# Detect whether we are uninstalling for Antigravity IDE or Antigravity
+APP_DIR_NAME="Antigravity"
+EXT_DIR_NAME=".antigravity"
+
+if [[ "$ANTIGRAVITY_CLI" == *"Antigravity IDE"* ]]; then
+    APP_DIR_NAME="Antigravity IDE"
+    EXT_DIR_NAME=".antigravity-ide"
+elif ps aux | grep -i "antigravity ide" | grep -v grep >/dev/null 2>&1; then
+    APP_DIR_NAME="Antigravity IDE"
+    EXT_DIR_NAME=".antigravity-ide"
+elif [ -d "$HOME/Library/Application Support/Antigravity IDE" ] && [ ! -d "$HOME/Library/Application Support/Antigravity" ]; then
+    APP_DIR_NAME="Antigravity IDE"
+    EXT_DIR_NAME=".antigravity-ide"
+fi
+
+echo -e "${GREEN}✓ Target app detected: $APP_DIR_NAME${NC}"
 
 echo ""
 echo "📦 Step 1: Removing Islands Dark theme extension..."
 
-EXT_DIR="$HOME/.antigravity/extensions/bwya77.islands-dark-1.0.0"
+EXT_DIR="$HOME/$EXT_DIR_NAME/extensions/bwya77.islands-dark-1.0.0"
 if [ -d "$EXT_DIR" ]; then
     rm -rf "$EXT_DIR"
     echo -e "${GREEN}✓ Theme extension removed from $EXT_DIR${NC}"
@@ -70,9 +89,9 @@ fi
 echo ""
 echo "⚙️  Step 3: Restoring Antigravity settings..."
 
-SETTINGS_DIR="$HOME/Library/Application Support/Antigravity/User"
+SETTINGS_DIR="$HOME/Library/Application Support/$APP_DIR_NAME/User"
 if [[ "$OSTYPE" == "linux-gnu"* ]]; then
-    SETTINGS_DIR="$HOME/.config/Antigravity/User"
+    SETTINGS_DIR="$HOME/.config/$APP_DIR_NAME/User"
 fi
 
 SETTINGS_FILE="$SETTINGS_DIR/settings.json"

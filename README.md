@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🏝️ Islands Dark for Antigravity
+# 🏝️ Islands Dark for Antigravity & agy-ide
 
 **A port of [Islands Dark](https://github.com/bwya77/vscode-dark-islands) to Google Antigravity IDE**
 
@@ -16,9 +16,9 @@ Deep backgrounds · Warm syntax highlighting · Glass-morphism UI · Smooth anim
 
 ## What is this?
 
-Antigravity is Google's AI-first IDE built on the VS Code engine. While it's compatible with VS Code themes, it uses **different file paths** for extensions and settings — so existing VS Code installers don't work out of the box.
+Antigravity is Google's AI-first IDE built on the VS Code engine (often invoked via the `antigravity` or `antigravity-ide` CLI). While it's compatible with VS Code themes, it uses **different file paths** for extensions and settings depending on whether you are using the classic Antigravity release or the new **Antigravity IDE** (`agy-ide`).
 
-This repo ports the beautiful Islands Dark theme + UI customizations to Antigravity with a fully automated installer.
+This repo ports the beautiful Islands Dark theme + UI customizations to both flavors of Antigravity with a fully automated installer.
 
 ---
 
@@ -30,6 +30,8 @@ This repo ports the beautiful Islands Dark theme + UI customizations to Antigrav
 - 🌊 **Smooth animations** — breadcrumbs fade on hover, tab actions fade in, scrollbars transition on hover
 - ✨ **File icon glow** — color-matched `drop-shadow` on file icons in the sidebar and tabs
 - 🔔 **Rounded notifications** — toast and notification center with glass borders and deep shadows
+- 🚀 **Dynamic Environment Detection** — supports both classic `Antigravity` and the new `Antigravity IDE` (`agy-ide`)
+- 🔤 **Pre-bundled Font Installer** — includes and automatically installs both `.otf` and `.ttf` formats of the design system's fonts
 
 ---
 
@@ -38,13 +40,13 @@ This repo ports the beautiful Islands Dark theme + UI customizations to Antigrav
 ### One-liner
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/p-lozano/antigravity-dark-islands/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/azwarnaim/antigravity-dark-islands/main/install.sh)
 ```
 
 ### Manual
 
 ```bash
-git clone https://github.com/p-lozano/antigravity-dark-islands
+git clone https://github.com/azwarnaim/antigravity-dark-islands
 cd antigravity-dark-islands
 bash install.sh
 ```
@@ -67,9 +69,9 @@ This will:
 - Remove the Islands Dark theme extension
 - Optionally uninstall Custom UI Style extension
 - Restore your settings from the backup (if available)
-- Reload Antigravity
+- Reload the window
 
-> **Note:** Fonts are not automatically removed, as they might be used by other applications. You can manually delete them from `~/Library/Fonts` (macOS) or `~/.local/share/fonts` (Linux) if desired.
+> **Note:** Fonts are not automatically removed, as they might be used by other applications. You can manually delete them from your system Fonts directory if desired.
 
 ---
 
@@ -77,35 +79,37 @@ This will:
 
 The theme looks best with these three fonts:
 
-| Font | Used for | Download |
-|------|----------|----------|
+| Font | Used for | Reference / Source |
+|------|----------|--------------------|
 | **IBM Plex Mono** | Editor | [ibm.com/plex](https://www.ibm.com/plex/) |
 | **FiraCode Nerd Font Mono** | Terminal | [nerdfonts.com](https://www.nerdfonts.com/) |
 | **Bear Sans UI** | UI panels & tabs | [bwya77/vscode-dark-islands](https://github.com/bwya77/vscode-dark-islands) |
 
-Place the `.otf` files in the `fonts/` folder and re-run `install.sh` — they'll be installed to Font Book automatically.
+These fonts (both `.otf` and `.ttf` formats) are **pre-bundled** directly in the `fonts/` folder of this repository. When you run `install.sh`, the installer will automatically copy and install them to your system Font Book (macOS) or user font directory (Linux). No manual downloads are required!
 
 ---
 
 ## How it works
 
-The installer does 5 things:
+The installer performs these steps:
 
-1. **Copies the theme extension** to `~/.antigravity/extensions/`
-2. **Installs [Custom UI Style](https://github.com/subframe7536/vscode-custom-ui-style)** via the Antigravity CLI (enables CSS injection)
-3. **Installs fonts** to `~/Library/Fonts` (macOS) or `~/.local/share/fonts` (Linux)
-4. **Merges settings** into `~/Library/Application Support/Antigravity/User/settings.json` — your existing settings are backed up first, nothing gets overwritten blindly
-5. **Reloads Antigravity** to apply changes
+1. **Detects the IDE target**: Automatically checks for the `antigravity-ide` CLI versus the classic `antigravity` CLI to determine directory structures.
+2. **Copies the theme extension** to the appropriate extensions directory (e.g., `~/.antigravity-ide/extensions/` or `~/.antigravity/extensions/`).
+3. **Installs [Custom UI Style](https://github.com/subframe7536/vscode-custom-ui-style)** via the detected CLI (enables CSS injection).
+4. **Installs fonts** (.otf & .ttf) to `~/Library/Fonts` (macOS) or `~/.local/share/fonts` (Linux).
+5. **Merges settings** safely into your IDE `settings.json` — your existing settings are backed up first, and Node.js is used to merge stylesheet configurations non-destructively.
+6. **Reloads the window** to apply changes.
 
-### Why not just use the original installer?
+### Path Comparison
 
-Antigravity stores everything in different paths than VS Code:
+VS Code, Antigravity, and the new Antigravity IDE store resources in separate directories:
 
-| | VS Code | Antigravity |
-|---|---|---|
-| Extensions | `~/.vscode/extensions/` | `~/.antigravity/extensions/` |
-| Settings | `~/Library/Application Support/Code/User/` | `~/Library/Application Support/Antigravity/User/` |
-| CLI | `code` | `/Applications/Antigravity.app/Contents/Resources/app/bin/antigravity` |
+| Resource | VS Code | Antigravity | Antigravity IDE (`agy-ide`) |
+|---|---|---|---|
+| **Extensions** | `~/.vscode/extensions/` | `~/.antigravity/extensions/` | `~/.antigravity-ide/extensions/` |
+| **Settings (macOS)** | `~/Library/Application Support/Code/User/` | `~/Library/Application Support/Antigravity/User/` | `~/Library/Application Support/Antigravity IDE/User/` |
+| **Settings (Linux)** | `~/.config/Code/User/` | `~/.config/Antigravity/User/` | `~/.config/Antigravity IDE/User/` |
+| **CLI Command** | `code` | `antigravity` | `antigravity-ide` |
 
 ---
 
