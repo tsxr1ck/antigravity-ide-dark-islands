@@ -40,14 +40,14 @@ This repo ports the beautiful Islands Dark theme + UI customizations to both fla
 ### One-liner
 
 ```bash
-bash <(curl -fsSL https://raw.githubusercontent.com/azwarnaim/antigravity-dark-islands/main/install.sh)
+bash <(curl -fsSL https://raw.githubusercontent.com/tsxr1ck/antigravity-ide-dark-islands/main/install.sh)
 ```
 
 ### Manual
 
 ```bash
-git clone https://github.com/azwarnaim/antigravity-dark-islands
-cd antigravity-dark-islands
+git clone https://github.com/tsxr1ck/antigravity-ide-dark-islands
+cd antigravity-ide-dark-islands
 bash install.sh
 ```
 
